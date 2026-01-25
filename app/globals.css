@@ -123,3 +123,209 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ========== NeuralLearn Header ========== */
+
+.nl-header {
+  width: 100%;
+  background: #ffffff;
+  border-bottom: 1px solid #eaeaea;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.nl-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Logo */
+.nl-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.nl-logo-icon {
+  font-size: 1.6rem;
+}
+
+.nl-logo-text {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #111;
+  letter-spacing: 0.3px;
+}
+
+/* Navigation */
+.nl-nav {
+  display: flex;
+  gap: 24px;
+}
+
+.nl-nav a {
+  text-decoration: none;
+  color: #444;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.nl-nav a:hover {
+  color: #000;
+}
+
+/* Actions */
+.nl-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.nl-btn-outline {
+  background: transparent;
+  border: 1px solid #ddd;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.nl-btn-outline:hover {
+  background: #f6f6f6;
+}
+
+.nl-btn-primary {
+  background: #000;
+  color: #fff;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.nl-btn-primary:hover {
+  opacity: 0.9;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .nl-nav {
+    display: none;
+  }
+
+  .nl-btn-outline {
+    display: none;
+  }
+}
+/* ========== Topic Input Section ========== */
+
+.nl-input-section {
+  padding: 80px 20px;
+  background: #ffffff;
+}
+
+.nl-input-container {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.nl-input-title {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: #111;
+}
+
+.nl-input-subtitle {
+  margin-top: 12px;
+  font-size: 1.05rem;
+  color: #555;
+}
+
+/* Input box */
+.nl-input-box {
+  margin-top: 30px;
+  display: flex;
+  gap: 10px;
+  background: #f6f6f6;
+  padding: 10px;
+  border-radius: 14px;
+}
+
+.nl-input-box input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 14px;
+  font-size: 1rem;
+  outline: none;
+}
+
+.nl-input-box button {
+  background: #000;
+  color: #fff;
+  border: none;
+  padding: 0 22px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.nl-input-box button:hover {
+  opacity: 0.9;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .nl-input-box {
+    flex-direction: column;
+  }
+
+  .nl-input-box button {
+    width: 100%;
+    padding: 14px 0;
+  }
+}
+@keyframes clerk-pulse {
+  from {
+    transform: scale(0.9);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+.cl-card::before {
+  content: "";
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #00bfff;
+  z-index: 10;
+}
+
+.cl-card::after {
+  content: "";
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #00bfff;
+  animation: clerk-pulse 1s linear infinite;
+  z-index: 10;
+}
