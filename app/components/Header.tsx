@@ -97,13 +97,7 @@ function Header() {
           >
             How It Works
           </a>
-          <a
-            href="#pricing"
-            onClick={() => setMenuOpen(false)}
-            className="px-3 py-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
-          >
-            Pricing
-          </a>
+          
 
           {!isSignedIn && (
             <div className="flex flex-col gap-2 pt-2 mt-1 border-t border-border/40">
