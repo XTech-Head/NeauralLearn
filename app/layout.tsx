@@ -7,7 +7,7 @@ import type { Metadata, Viewport } from "next";
 export const metadata: Metadata = {
   title: "NeuralLearn",
   description: "AI-powered course generator",
-  manifest: "/manifest.json",
+  // No manifest here — Next.js picks it up automatically from app/manifest.ts
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
