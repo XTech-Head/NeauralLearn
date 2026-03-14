@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
-  },
+  "dev": "next dev",
+  "build": "next build",
+  "start": "next start",
+  "db:push": "drizzle-kit push",
+  "db:studio": "drizzle-kit studio"
+},
   "dependencies": {
     "@clerk/nextjs": "^6.36.10",
     "@hookform/resolvers": "^5.2.2",
