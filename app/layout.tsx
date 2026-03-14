@@ -1,6 +1,30 @@
 import { ClerkProvider } from "@clerk/nextjs";
+import { ThemeProvider } from "next-themes";
 import Provider from "./provider";
 import "./globals.css";
+import type { Metadata, Viewport } from "next";
+
+export const metadata: Metadata = {
+  title: "NeuralLearn",
+  description: "AI-powered course generator",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "NeuralLearn",
+  },
+  icons: {
+    icon: [
+      { url: "/icons/icon-16.png", sizes: "16x16" },
+      { url: "/icons/icon-32.png", sizes: "32x32" },
+    ],
+    apple: "/icons/icon-180.png",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#7c3aed",
+};
 
 export default function RootLayout({
   children,
@@ -8,10 +32,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
         <ClerkProvider>
-          <Provider>{children}</Provider>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+            <Provider>{children}</Provider>
+          </ThemeProvider>
         </ClerkProvider>
       </body>
     </html>
