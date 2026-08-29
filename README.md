@@ -66,38 +66,6 @@ NeuralLearn is designed as a Progressive Web App, allowing the platform to provi
 
 ---
 
-## 🖥️ Screenshots
-
-### Home
-
-![NeuralLearn Home](public/screenshots/neurallearn-home.png)
-
-### AI Course Generator
-
-![Course Generator](public/screenshots/course-generator.png)
-
-### Course View
-
-![Course View](public/screenshots/course-view.png)
-
-### Lesson Experience
-
-![Lesson](public/screenshots/lesson.png)
-
-### Quizzes
-
-![Quiz](public/screenshots/quiz.png)
-
-### Flashcards
-
-![Flashcards](public/screenshots/flashcards.png)
-
-### Media Explorer
-
-![Media Explorer](public/screenshots/media-explorer.png)
-
----
-
 ## 🛠️ Tech Stack
 
 ### Frontend
