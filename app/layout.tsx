@@ -7,7 +7,7 @@ import type { Metadata, Viewport } from "next";
 export const metadata: Metadata = {
   title: "NeuralLearn",
   description: "AI-powered course generator",
-  // No manifest here — Next.js picks it up automatically from app/manifest.ts
+  manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -17,6 +17,8 @@ export const metadata: Metadata = {
     icon: [
       { url: "/icons/icon-16.png", sizes: "16x16" },
       { url: "/icons/icon-32.png", sizes: "32x32" },
+      { url: "/icons/icon-192.png", sizes: "192x192" },
+      { url: "/icons/icon-512.png", sizes: "512x512" },
     ],
     apple: "/icons/icon-180.png",
   },
@@ -24,6 +26,9 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#7c3aed",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
