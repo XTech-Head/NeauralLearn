@@ -22,7 +22,7 @@ function useAudioRecorder() {
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
 
-  const start = async (): Promise<boolean> => {
+  const start = async (): Promise<{ ok: boolean; reason?: string }> => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
@@ -35,8 +35,14 @@ function useAudioRecorder() {
       mediaRecorderRef.current = recorder;
       recorder.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
       recorder.start(100);
-      return true;
-    } catch { return false; }
+      return { ok: true };
+    } catch (error: any) {
+      console.error("Microphone access error:", error);
+      const reason = error?.name && error?.message
+        ? `${error.name}: ${error.message}`
+        : "Unknown microphone error";
+      return { ok: false, reason };
+    }
   };
 
   const stop = (): Promise<Blob> => new Promise((resolve) => {
@@ -97,9 +103,12 @@ export default function CourseGenerator() {
       finally { setMicState("idle"); }
     } else {
       setError(null);
-      const started = await recorder.start();
-      if (started) setMicState("recording");
-      else setError("Microphone access denied. Please allow it in your browser settings.");
+      const result = await recorder.start();
+      if (result.ok) {
+        setMicState("recording");
+      } else {
+        setError(`Microphone access failed: ${result.reason}. Please allow the mic in this browser/site settings.`);
+      }
     }
   };
 
