@@ -8,15 +8,14 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { auth, currentUser } from "@clerk/nextjs/server";
 import { db } from "@/config/db";
 import {
   userProgressTable,
   usersTable,
   chaptersTable,
-  coursesTable,
 } from "@/config/schema";
 import { eq, and, inArray } from "drizzle-orm";
+import { getAuthedDbUser } from "@/lib/server-auth";
 
 async function getDbUser(email: string) {
   const [user] = await db
@@ -29,15 +28,10 @@ async function getDbUser(email: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId: clerkId } = await auth();
-    if (!clerkId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const clerkUser = await currentUser();
-    const email = clerkUser?.emailAddresses[0]?.emailAddress;
-    if (!email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const dbUser = await getDbUser(email);
-    if (!dbUser) return NextResponse.json({ error: "User not found" }, { status: 404 });
+    const { user: dbUser, error, status } = await getAuthedDbUser();
+    if (!dbUser || error) {
+      return NextResponse.json({ error }, { status });
+    }
 
     const { chapterId, completed, quizPassed } = await req.json();
     if (!chapterId) return NextResponse.json({ error: "chapterId required" }, { status: 400 });
@@ -82,15 +76,10 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const { userId: clerkId } = await auth();
-    if (!clerkId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const clerkUser = await currentUser();
-    const email = clerkUser?.emailAddresses[0]?.emailAddress;
-    if (!email) return NextResponse.json({ progress: [] });
-
-    const dbUser = await getDbUser(email);
-    if (!dbUser) return NextResponse.json({ progress: [] });
+    const { user: dbUser, error } = await getAuthedDbUser();
+    if (!dbUser || error) {
+      return NextResponse.json({ progress: [] });
+    }
 
     const courseId = req.nextUrl.searchParams.get("courseId");
     if (!courseId) return NextResponse.json({ progress: [] });

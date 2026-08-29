@@ -10,7 +10,7 @@ function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div className="container flex h-16 items-center justify-between px-4 md:px-8">
 
         {/* Logo */}
@@ -18,10 +18,12 @@ function Header() {
           className="flex items-center gap-2 cursor-pointer shrink-0"
           onClick={() => { router.push('/'); setMenuOpen(false); }}
         >
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-purple-600 to-pink-600">
-            <span className="text-xl">🧠</span>
-          </div>
-          <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+          <img
+            src="/icons/icon-32.png"
+            alt="Xtech logo"
+            className="h-9 w-9 rounded-lg"
+          />
+          <span className="text-xl font-bold bg-linear-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
             NeuralLearn
           </span>
         </div>
@@ -52,7 +54,7 @@ function Header() {
               </button>
               <button
                 onClick={() => router.push('/sign-up')}
-                className="px-4 py-2 text-sm font-semibold bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:opacity-90 transition-opacity"
+                className="px-4 py-2 text-sm font-semibold bg-linear-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:opacity-90 transition-opacity"
               >
                 Get Started
               </button>
@@ -68,12 +70,12 @@ function Header() {
           {/* Hamburger */}
           <button
             onClick={() => setMenuOpen(o => !o)}
-            className="flex flex-col justify-center items-center w-10 h-10 gap-[5px] rounded-md hover:bg-accent transition-colors"
+            className="flex flex-col justify-center items-center w-10 h-10 gap-1.25 rounded-md hover:bg-accent transition-colors"
             aria-label="Toggle menu"
           >
-            <span className={`block w-5 h-0.5 bg-foreground rounded transition-all duration-300 ${menuOpen ? "rotate-45 translate-y-[7px]" : ""}`} />
+            <span className={`block w-5 h-0.5 bg-foreground rounded transition-all duration-300 ${menuOpen ? "rotate-45 translate-y-1.75" : ""}`} />
             <span className={`block w-5 h-0.5 bg-foreground rounded transition-all duration-300 ${menuOpen ? "opacity-0" : ""}`} />
-            <span className={`block w-5 h-0.5 bg-foreground rounded transition-all duration-300 ${menuOpen ? "-rotate-45 -translate-y-[7px]" : ""}`} />
+            <span className={`block w-5 h-0.5 bg-foreground rounded transition-all duration-300 ${menuOpen ? "-rotate-45 -translate-y-1.75" : ""}`} />
           </button>
         </div>
       </div>
@@ -107,7 +109,7 @@ function Header() {
               </button>
               <button
                 onClick={() => { router.push('/sign-up'); setMenuOpen(false); }}
-                className="w-full px-4 py-2.5 text-sm font-semibold bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:opacity-90 transition-opacity"
+                className="w-full px-4 py-2.5 text-sm font-semibold bg-linear-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:opacity-90 transition-opacity"
               >
                 Get Started
               </button>

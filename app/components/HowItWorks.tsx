@@ -34,11 +34,11 @@ function HowItWorks() {
           <div key={index} className="relative">
             {/* Connecting line */}
             {index < steps.length - 1 && (
-              <div className="hidden md:block absolute top-12 left-1/2 w-full h-0.5 bg-gradient-to-r from-purple-600 to-pink-600 opacity-20" />
+              <div className="hidden md:block absolute top-12 left-1/2 w-full h-0.5 bg-linear-to-r from-purple-600 to-pink-600 opacity-20" />
             )}
             
             <div className="relative text-center space-y-4">
-              <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 text-white text-3xl font-bold">
+              <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-linear-to-br from-purple-600 to-pink-600 text-white text-3xl font-bold">
                 {step.number}
               </div>
               <h3 className="text-xl font-semibold">{step.title}</h3>

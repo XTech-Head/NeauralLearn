@@ -4,6 +4,7 @@ import Header from "./components/Header";
 import CourseGenerator from "./components/CourseGenerator";
 import Features from "./components/Features";
 import HowItWorks from "./components/HowItWorks";
+import DonationCard from "./components/DonationCard";
 
 export default function HomePage() {
   return (
@@ -29,7 +30,7 @@ export default function HomePage() {
 
         {/* CTA Section */}
         <section className="py-8 sm:py-12">
-          <div className="max-w-4xl mx-auto text-center space-y-4 sm:space-y-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl sm:rounded-3xl p-8 sm:p-12 text-white">
+          <div className="max-w-4xl mx-auto text-center space-y-4 sm:space-y-6 bg-linear-to-r from-purple-600 to-pink-600 rounded-2xl sm:rounded-3xl p-8 sm:p-12 text-white">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold leading-tight">
               Ready to Transform Your Learning?
             </h2>
@@ -45,12 +46,17 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* Donation Section */}
+        <section className="pb-4 px-4">
+          <DonationCard />
+        </section>
+
       </main>
 
       {/* Footer */}
       <footer className="border-t border-border py-8">
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-muted-foreground text-sm">
-          © 2026 NeuralLearn From xammytech. All rights reserved.
+          © 2026NeuralLearn From Xtech Devs. All rights reserved.
         </div>
       </footer>
     </div>

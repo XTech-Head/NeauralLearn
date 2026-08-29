@@ -4,42 +4,25 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { auth, currentUser } from "@clerk/nextjs/server";
 import { db } from "@/config/db";
-import { coursesTable, chaptersTable, quizzesTable, usersTable } from "@/config/schema";
+import { coursesTable, chaptersTable, quizzesTable } from "@/config/schema";
 import { eq, asc, inArray } from "drizzle-orm";
+import { getAuthedDbUser } from "@/lib/server-auth";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { userId: clerkId } = await auth();
-    if (!clerkId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { user: dbUser, error, status } = await getAuthedDbUser();
+    if (!dbUser || error) {
+      return NextResponse.json({ error }, { status });
     }
 
     const { id } = await params;
     const courseId = parseInt(id);
     if (isNaN(courseId)) {
       return NextResponse.json({ error: "Invalid course ID" }, { status: 400 });
-    }
-
-    // Get DB user
-    const clerkUser = await currentUser();
-    const email = clerkUser?.emailAddresses[0]?.emailAddress;
-    if (!email) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const [dbUser] = await db
-      .select()
-      .from(usersTable)
-      .where(eq(usersTable.email, email))
-      .limit(1);
-
-    if (!dbUser) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Get course
@@ -97,5 +80,44 @@ export async function GET(
   } catch (err) {
     console.error("Get course error:", err);
     return NextResponse.json({ error: "Failed to fetch course" }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { user: dbUser, error, status } = await getAuthedDbUser();
+    if (!dbUser || error) {
+      return NextResponse.json({ error }, { status });
+    }
+
+    const { id } = await params;
+    const courseId = parseInt(id);
+    if (isNaN(courseId)) {
+      return NextResponse.json({ error: "Invalid course ID" }, { status: 400 });
+    }
+
+    const [course] = await db
+      .select()
+      .from(coursesTable)
+      .where(eq(coursesTable.id, courseId))
+      .limit(1);
+
+    if (!course) {
+      return NextResponse.json({ error: "Course not found" }, { status: 404 });
+    }
+
+    if (course.userId !== dbUser.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    await db.delete(coursesTable).where(eq(coursesTable.id, courseId));
+
+    return NextResponse.json({ success: true, deletedCourseId: courseId });
+  } catch (err) {
+    console.error("Delete course error:", err);
+    return NextResponse.json({ error: "Failed to delete course" }, { status: 500 });
   }
 }

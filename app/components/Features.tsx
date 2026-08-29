@@ -33,7 +33,7 @@ function Features() {
   return (
     <div id="features" className="w-full max-w-6xl mx-auto space-y-8">
       <div className="text-center space-y-3">
-        <h2 className="text-3xl md:text-4xl font-bold">Why Choose NeuralLearn?</h2>
+        <h2 className="text-3xl md:text-4xl font-bold">Why Choose Xtech?</h2>
         <p className="text-muted-foreground text-lg">
           The smartest way to learn anything, powered by AI
         </p>
@@ -48,7 +48,7 @@ function Features() {
               className="bg-card border border-border rounded-2xl p-6 hover:shadow-lg transition-all duration-300 group"
             >
               <div className="flex items-start gap-4">
-                <div className={`p-3 rounded-xl bg-gradient-to-br ${feature.color} group-hover:scale-110 transition-transform`}>
+                <div className={`p-3 rounded-xl bg-linear-to-br ${feature.color} group-hover:scale-110 transition-transform`}>
                   <Icon className="w-6 h-6 text-white" />
                 </div>
                 <div className="space-y-2 flex-1">

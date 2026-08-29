@@ -49,7 +49,7 @@ function StatsCards() {
                 <p className="text-3xl font-bold">{stat.value}</p>
                 <p className="text-xs text-muted-foreground">{stat.change}</p>
               </div>
-              <div className={`p-3 rounded-lg bg-gradient-to-br ${stat.color}`}>
+              <div className={`p-3 rounded-lg bg-linear-to-br ${stat.color}`}>
                 <Icon className="w-5 h-5 text-white" />
               </div>
             </div>

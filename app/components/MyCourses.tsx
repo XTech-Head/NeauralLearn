@@ -80,6 +80,19 @@ export default function MyCourses() {
     return () => clearInterval(t);
   }, [courses]);
 
+  const handleDeleteCourse = async (courseId: number) => {
+    const confirmed = window.confirm("Delete this course from your account and database?");
+    if (!confirmed) return;
+
+    const res = await fetch(`/api/course/${courseId}`, { method: "DELETE" });
+    if (!res.ok) {
+      alert("Failed to delete course.");
+      return;
+    }
+
+    setCourses((prev) => prev.filter((course) => course.id !== courseId));
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -127,81 +140,94 @@ export default function MyCourses() {
       {courses.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {courses.map((course, i) => (
-            <Link
+            <div
               key={course.id}
-              href={`/course/${course.id}`}
-              className="group relative rounded-2xl border border-border bg-card hover:border-purple-500/40 hover:bg-purple-500/[0.03] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-purple-500/5 flex flex-col overflow-hidden"
+              className="group relative rounded-2xl border border-border bg-card hover:border-purple-500/40 hover:bg-purple-500/3 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-purple-500/5 flex flex-col overflow-hidden"
               style={{ animationDelay: `${i * 40}ms` }}
             >
-              {/* Top accent bar */}
-              <div
-                className={`h-0.5 w-full ${
-                  course.status === "ready"
-                    ? "bg-gradient-to-r from-purple-500 to-pink-500"
-                    : course.status === "generating"
-                    ? "bg-gradient-to-r from-yellow-500 to-orange-400 animate-pulse"
-                    : "bg-red-500/50"
-                }`}
-              />
+              <Link href={`/course/${course.id}`} className="flex flex-col flex-1">
+                {/* Top accent bar */}
+                <div
+                  className={`h-0.5 w-full ${
+                    course.status === "ready"
+                      ? "bg-linear-to-r from-purple-500 to-pink-500"
+                      : course.status === "generating"
+                      ? "bg-linear-to-r from-yellow-500 to-orange-400 animate-pulse"
+                      : "bg-red-500/50"
+                  }`}
+                />
 
-              <div className="p-5 flex flex-col gap-3 flex-1">
-                {/* Status + level */}
-                <div className="flex items-center justify-between">
-                  <span
-                    className={`text-xs px-2 py-0.5 rounded-full border capitalize font-medium ${
-                      levelStyles[course.level] ?? "text-muted-foreground bg-muted border-border"
-                    }`}
-                  >
-                    {course.level}
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    <span className={`w-1.5 h-1.5 rounded-full ${statusDot[course.status]}`} />
-                    <span className="text-xs text-muted-foreground">
-                      {statusLabel[course.status]}
+                <div className="p-5 flex flex-col gap-3 flex-1">
+                  {/* Status + level */}
+                  <div className="flex items-center justify-between">
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full border capitalize font-medium ${
+                        levelStyles[course.level] ?? "text-muted-foreground bg-muted border-border"
+                      }`}
+                    >
+                      {course.level}
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`w-1.5 h-1.5 rounded-full ${statusDot[course.status]}`} />
+                      <span className="text-xs text-muted-foreground">
+                        {statusLabel[course.status]}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Title */}
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-sm leading-snug line-clamp-2 group-hover:text-purple-300 transition-colors">
+                      {course.title}
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2 leading-relaxed">
+                      {course.description}
+                    </p>
+                  </div>
+
+                  {/* Meta row */}
+                  <div className="flex items-center justify-between pt-1 border-t border-border/50">
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <BookOpen className="w-3 h-3" />
+                        {course.chapterCount} ch
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {course.estimatedHours}h
+                      </span>
+                    </div>
+                    <span className="text-xs text-muted-foreground/60">
+                      {timeAgo(course.createdAt)}
                     </span>
                   </div>
                 </div>
 
-                {/* Title */}
-                <div className="flex-1">
-                  <h3 className="font-semibold text-sm leading-snug line-clamp-2 group-hover:text-purple-300 transition-colors">
-                    {course.title}
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2 leading-relaxed">
-                    {course.description}
-                  </p>
+                {/* Hover arrow */}
+                <div className="absolute right-4 bottom-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <ChevronRight className="w-4 h-4 text-purple-400" />
                 </div>
 
-                {/* Meta row */}
-                <div className="flex items-center justify-between pt-1 border-t border-border/50">
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <BookOpen className="w-3 h-3" />
-                      {course.chapterCount} ch
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {course.estimatedHours}h
-                    </span>
+                {/* Generating overlay shimmer */}
+                {course.status === "generating" && (
+                  <div className="absolute inset-0 pointer-events-none rounded-2xl overflow-hidden">
+                    <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/2 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
                   </div>
-                  <span className="text-xs text-muted-foreground/60">
-                    {timeAgo(course.createdAt)}
-                  </span>
-                </div>
-              </div>
+                )}
+              </Link>
 
-              {/* Hover arrow */}
-              <div className="absolute right-4 bottom-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                <ChevronRight className="w-4 h-4 text-purple-400" />
-              </div>
-
-              {/* Generating overlay shimmer */}
-              {course.status === "generating" && (
-                <div className="absolute inset-0 pointer-events-none rounded-2xl overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
-                </div>
-              )}
-            </Link>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  void handleDeleteCourse(course.id);
+                }}
+                className="absolute right-3 top-3 z-10 rounded-md border border-red-500/30 bg-red-500/10 px-2 py-1 text-[10px] font-medium text-red-300 hover:bg-red-500/20 transition-colors"
+                aria-label={`Delete ${course.title}`}
+              >
+                Delete
+              </button>
+            </div>
           ))}
         </div>
       )}

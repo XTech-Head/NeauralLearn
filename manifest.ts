@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "NeuralLearn — AI Course Generator",
+    name: "NeuralLearn — AI Course-Generator",
     short_name: "NeuralLearn",
     description: "Generate personalized AI-powered courses on any topic",
     start_url: "/",

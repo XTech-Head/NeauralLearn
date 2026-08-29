@@ -3,9 +3,13 @@ import React, { useEffect, useState, useCallback } from "react";
 import {
   ChevronDown, ChevronUp, PlayCircle, BookText, Loader2, AlertCircle,
   Trophy, Clock, BarChart2, ArrowLeft, CheckCircle2, Circle,
-  ExternalLink, Newspaper, Layers, RotateCw, CheckCheck,
+  ExternalLink, Newspaper, Layers, RotateCw, CheckCheck, Download,
+  Share2, Trash2,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { jsPDF } from "jspdf";
+import { Document, Packer, Paragraph, TextRun, HeadingLevel } from "docx";
 import { CourseWithChapters, QuizQuestion, Flashcard, Article } from "../../config/schema";
 
 type QuizState = { selected: (number | null)[]; submitted: boolean; score: number };
@@ -79,7 +83,7 @@ function QuizWidget({ questions, chapterId, onPass }: { questions: QuizQuestion[
       })}
       {!state.submitted && (
         <button onClick={handleSubmit} disabled={!allAnswered}
-          className="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold text-sm hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed">
+          className="w-full py-2.5 rounded-xl bg-linear-to-r from-purple-600 to-pink-600 text-white font-semibold text-sm hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed">
           Submit Answers
         </button>
       )}
@@ -101,7 +105,7 @@ function FlashcardWidget({ cards }: { cards: Flashcard[] }) {
         <span className="text-xs text-muted-foreground ml-auto">{index + 1} / {cards.length}</span>
       </div>
       <div onClick={() => setFlipped(f => !f)}
-        className="cursor-pointer rounded-xl border border-border bg-gradient-to-br from-indigo-500/5 to-purple-500/5 hover:from-indigo-500/10 hover:to-purple-500/10 transition-all p-6 min-h-[120px] flex flex-col items-center justify-center text-center select-none gap-2">
+        className="cursor-pointer rounded-xl border border-border bg-linear-to-br from-indigo-500/5 to-purple-500/5 hover:from-indigo-500/10 hover:to-purple-500/10 transition-all p-6 min-h-30 flex flex-col items-center justify-center text-center select-none gap-2">
         <p className="text-xs text-muted-foreground mb-1">{flipped ? "Answer" : "Question — tap to reveal"}</p>
         <p className="text-sm font-medium leading-relaxed">{flipped ? card.back : card.front}</p>
       </div>
@@ -133,7 +137,7 @@ function ArticlesWidget({ articles }: { articles: Article[] }) {
               <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">{a.snippet}</p>
               <p className="text-xs text-muted-foreground/50 mt-1">{a.source}</p>
             </div>
-            <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-emerald-400 flex-shrink-0 mt-0.5 transition-colors" />
+            <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-emerald-400 shrink-0 mt-0.5 transition-colors" />
           </a>
         ))}
       </div>
@@ -142,7 +146,16 @@ function ArticlesWidget({ articles }: { articles: Article[] }) {
 }
 
 function LessonContent({ markdown }: { markdown: string }) {
-  const html = markdown
+  const escapeHtml = (value: string) =>
+    value
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
+  const safeMarkdown = escapeHtml(markdown || "");
+  const html = safeMarkdown
     .replace(/^### (.+)$/gm, '<h3 class="font-semibold text-base mt-4 mb-1">$1</h3>')
     .replace(/^## (.+)$/gm, '<h2 class="font-bold text-lg mt-5 mb-2">$1</h2>')
     .replace(/^# (.+)$/gm, '<h1 class="font-bold text-xl mt-6 mb-2">$1</h1>')
@@ -150,7 +163,9 @@ function LessonContent({ markdown }: { markdown: string }) {
     .replace(/`([^`]+)`/g, '<code class="bg-muted px-1 rounded text-xs font-mono">$1</code>')
     .replace(/```[\w]*\n([\s\S]*?)```/g, '<pre class="bg-muted p-3 rounded-lg overflow-x-auto text-xs font-mono my-2"><code>$1</code></pre>')
     .replace(/^- (.+)$/gm, '<li class="ml-4 list-disc">$1</li>')
-    .replace(/\n\n/g, '<p class="mt-3">').replace(/\n/g, "<br/>");
+    .replace(/\n\n/g, '<p class="mt-3">')
+    .replace(/\n/g, "<br/>");
+
   return <div dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
@@ -168,29 +183,40 @@ function ChapterCard({ chapter, index, isOpen, onToggle, progress, onMarkComplet
   const quizPassed = progress?.quizPassed ?? false;
 
   return (
-    <div className={`rounded-xl border overflow-hidden transition-colors ${isCompleted ? "border-green-500/30" : "border-border"}`}>
-      <button onClick={onToggle} className="w-full flex items-center gap-4 p-4 text-left hover:bg-muted/30 transition-colors">
-        <span className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold transition-all ${isCompleted ? "bg-green-500" : "bg-gradient-to-br from-purple-600 to-pink-600"}`}>
-          {isCompleted ? <CheckCheck className="w-4 h-4" /> : index + 1}
-        </span>
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm truncate">{chapter.title}</p>
-          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{chapter.description}</p>
-        </div>
-        <div className="flex items-center gap-3 flex-shrink-0 ml-2">
-          {quizPassed && <span className="hidden sm:flex items-center gap-1 text-xs text-yellow-400"><Trophy className="w-3 h-3" /> Passed</span>}
-          <span className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground"><Clock className="w-3 h-3" />{chapter.durationMinutes}m</span>
-          {!isReady && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
-          {isOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+    <div className={`overflow-hidden rounded-2xl border transition-all duration-200 ${isCompleted ? "border-green-500/30 bg-green-500/3" : "border-border bg-card/70 hover:border-purple-500/30"}`}>
+      <button onClick={onToggle} className="w-full p-4 text-left transition-colors hover:bg-muted/20">
+        <div className="flex items-center gap-4">
+          <span className={`shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-bold transition-all ${isCompleted ? "bg-green-500" : "bg-linear-to-br from-purple-600 to-pink-600"}`}>
+            {isCompleted ? <CheckCheck className="w-4 h-4" /> : index + 1}
+          </span>
+
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="font-semibold text-sm md:text-base truncate">{chapter.title}</p>
+              {!isReady && <span className="text-[10px] uppercase tracking-wide text-amber-400">Queued</span>}
+              {isReady && <span className="text-[10px] uppercase tracking-wide text-emerald-400">Ready</span>}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{chapter.description}</p>
+          </div>
+
+          <div className="hidden sm:flex items-center gap-3 shrink-0 ml-2 text-xs text-muted-foreground">
+            {quizPassed && <span className="inline-flex items-center gap-1 text-yellow-400"><Trophy className="w-3 h-3" /> Passed</span>}
+            <span className="inline-flex items-center gap-1"><Clock className="w-3 h-3" />{chapter.durationMinutes}m</span>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {!isReady && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
+            {isOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+          </div>
         </div>
       </button>
 
       {isOpen && (
-        <div className="border-t border-border p-4 space-y-6">
+        <div className="border-t border-border bg-linear-to-b from-muted/12 to-transparent p-4 md:p-5 space-y-6">
           {!isReady ? (
-            <div className="flex items-center gap-3 py-8 justify-center text-muted-foreground">
+            <div className="flex items-center gap-3 py-10 justify-center text-muted-foreground">
               <Loader2 className="w-5 h-5 animate-spin" />
-              <span className="text-sm">Generating lesson content…</span>
+              <span className="text-sm">Generating this chapter’s lesson…</span>
             </div>
           ) : (
             <>
@@ -208,7 +234,7 @@ function ChapterCard({ chapter, index, isOpen, onToggle, progress, onMarkComplet
                 <div className="flex items-center gap-2 text-sm font-medium">
                   <BookText className="w-4 h-4 text-blue-400" /> Lesson Notes
                 </div>
-                <div className="prose prose-sm prose-invert max-w-none bg-muted/30 rounded-xl p-4 text-sm leading-relaxed">
+                <div className="prose prose-sm prose-invert max-w-none rounded-2xl border border-border bg-background/60 p-4 text-sm leading-relaxed">
                   <LessonContent markdown={chapter.lessonContent} />
                 </div>
               </div>
@@ -216,20 +242,20 @@ function ChapterCard({ chapter, index, isOpen, onToggle, progress, onMarkComplet
               {articles.length > 0 && <ArticlesWidget articles={articles} />}
 
               {flashcards.length > 0 && (
-                <div className="bg-muted/20 rounded-xl p-4 border border-border">
+                <div className="rounded-2xl border border-border bg-muted/10 p-4">
                   <FlashcardWidget cards={flashcards} />
                 </div>
               )}
 
               {quizQuestions.length > 0 && (
-                <div className="bg-muted/20 rounded-xl p-4 border border-border">
+                <div className="rounded-2xl border border-border bg-muted/10 p-4">
                   <QuizWidget questions={quizQuestions} chapterId={chapter.id} onPass={() => onQuizPass(chapter.id)} />
                 </div>
               )}
 
               <div className="pt-2 border-t border-border/50">
                 <button onClick={() => onMarkComplete(chapter.id)}
-                  className={`flex items-center gap-2 text-sm px-4 py-2 rounded-lg border transition-all ${
+                  className={`inline-flex items-center gap-2 text-sm px-4 py-2 rounded-xl border transition-all ${
                     isCompleted ? "border-green-500/30 bg-green-500/10 text-green-400 hover:bg-green-500/20"
                     : "border-border hover:border-purple-500/40 hover:bg-purple-500/5 text-muted-foreground hover:text-foreground"}`}>
                   {isCompleted ? <><CheckCircle2 className="w-4 h-4" /> Completed</> : <><Circle className="w-4 h-4" /> Mark as complete</>}
@@ -248,6 +274,150 @@ export default function CourseView({ courseId }: { courseId: number }) {
   const [error, setError] = useState<string | null>(null);
   const [openChapter, setOpenChapter] = useState<number | null>(0);
   const [progress, setProgress] = useState<ProgressMap>({});
+  const router = useRouter();
+
+  const stripMarkdown = (value: string) =>
+    (value || "")
+      .replace(/```[\s\S]*?```/g, "")
+      .replace(/\*\*(.*?)\*\*/g, "$1")
+      .replace(/`([^`]+)`/g, "$1")
+      .replace(/^#+\s*/gm, "")
+      .replace(/^-\s+/gm, "• ")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+
+  const exportToDocx = async () => {
+    if (!course) return;
+
+    const sections = [
+      new Paragraph({
+        text: course.title,
+        heading: HeadingLevel.TITLE,
+      }),
+      new Paragraph({
+        text: course.description,
+      }),
+      new Paragraph({
+        text: `Level: ${course.level} | Estimated Hours: ${course.estimatedHours}`,
+      }),
+    ];
+
+    for (const chapter of course.chapters ?? []) {
+      sections.push(
+        new Paragraph({
+          text: `${chapter.order}. ${chapter.title}`,
+          heading: HeadingLevel.HEADING_2,
+        }),
+        new Paragraph({
+          text: chapter.description,
+        }),
+        new Paragraph({
+          text: stripMarkdown(chapter.lessonContent || "No lesson content generated yet."),
+        })
+      );
+    }
+
+    const doc = new Document({ sections: [{ children: sections }] });
+    const blob = await Packer.toBlob(doc);
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${course.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "course"}.docx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportCourse = async (format: "pdf" | "docx") => {
+    if (!course) return;
+
+    if (format === "docx") {
+      await exportToDocx();
+      return;
+    }
+
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    let y = 52;
+    const margin = 52;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const contentWidth = pageWidth - margin * 2;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(20);
+    const title = course.title;
+    const titleLines = doc.splitTextToSize(title, contentWidth);
+    doc.text(titleLines, margin, y);
+    y += titleLines.length * 24;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    const description = doc.splitTextToSize(course.description || "", contentWidth);
+    doc.text(description, margin, y);
+    y += description.length * 16 + 18;
+
+    for (const chapter of course.chapters ?? []) {
+      if (y > 740) {
+        doc.addPage();
+        y = 52;
+      }
+
+      const chapterTitle = `${chapter.order}. ${chapter.title}`;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      const chapterLines = doc.splitTextToSize(chapterTitle, contentWidth);
+      doc.text(chapterLines, margin, y);
+      y += chapterLines.length * 16 + 8;
+
+      const lessonText = stripMarkdown(chapter.lessonContent || "No lesson content generated yet.");
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      const blocks = doc.splitTextToSize(lessonText, contentWidth);
+      doc.text(blocks, margin, y, { maxWidth: contentWidth });
+      y += blocks.length * 12 + 18;
+    }
+
+    const filename = `${course.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "course"}.pdf`;
+    doc.save(filename);
+  };
+
+  const handleShareCourse = async () => {
+    if (!course) return;
+
+    const shareText = `${course.title} — ${course.description}\n\nView it in NeuralLearn: ${window.location.origin}/course/${course.id}`;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: course.title,
+          text: shareText,
+          url: `${window.location.origin}/course/${course.id}`,
+        });
+        return;
+      }
+
+      await navigator.clipboard.writeText(shareText);
+      alert("Course details copied to clipboard.");
+    } catch (err) {
+      console.warn("Share failed:", err);
+      alert("Share is unavailable right now. You can still export the course as a JSON file.");
+    }
+  };
+
+  const handleDeleteCourse = async () => {
+    if (!course) return;
+
+    const confirmed = window.confirm(`Delete "${course.title}" from your account and database?`);
+    if (!confirmed) return;
+
+    const res = await fetch(`/api/course/${courseId}`, { method: "DELETE" });
+    if (!res.ok) {
+      alert("Failed to delete this course.");
+      return;
+    }
+
+    router.push("/");
+  };
 
   // ── Fetch course ────────────────────────────────────────────────────────────
   const fetchCourse = useCallback(async (): Promise<string> => {
@@ -345,6 +515,28 @@ export default function CourseView({ courseId }: { courseId: number }) {
     }).catch(() => {});
   };
 
+  const handleOpenChapter = async (chapter: CourseWithChapters["chapters"][0], index: number) => {
+    const isOpening = openChapter !== index;
+    setOpenChapter(isOpening ? index : null);
+
+    if (!isOpening || (chapter.lessonContent && chapter.lessonContent.length > 10)) return;
+
+    try {
+      const response = await fetch(`/api/course/${courseId}/chapter/${chapter.id}`, {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        console.warn("Failed to generate chapter on demand:", await response.text());
+        return;
+      }
+
+      await fetchCourse();
+    } catch (err) {
+      console.warn("Chapter generation request failed:", err);
+    }
+  };
+
   // ── Error state ───────────────────────────────────────────────────────────────
   if (error) return (
     <div className="max-w-2xl mx-auto py-20 text-center space-y-4">
@@ -370,6 +562,9 @@ export default function CourseView({ courseId }: { courseId: number }) {
   const generationPct = total > 0 ? (readyChapters / total) * 100 : 0;
   const completedCount = Object.values(progress).filter(p => p.completed).length;
   const completionPct = total > 0 ? Math.round((completedCount / total) * 100) : 0;
+  const lazyGenerationNote = total > 0 && readyChapters < total
+    ? `Open a chapter to generate its lesson content only when needed.`
+    : "All chapters are ready.";
 
   const levelColor = {
     beginner: "text-green-400 bg-green-500/10 border-green-500/30",
@@ -380,13 +575,44 @@ export default function CourseView({ courseId }: { courseId: number }) {
   // ── Render ────────────────────────────────────────────────────────────────────
   return (
     <div className="max-w-3xl mx-auto space-y-8 pb-20">
-      <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-        <ArrowLeft className="w-4 h-4" /> Back
-      </Link>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="w-4 h-4" /> Back
+        </Link>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={handleShareCourse}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Share2 className="w-3.5 h-3.5" /> Share
+          </button>
+          <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-1.5 py-1">
+            <button
+              onClick={() => void handleExportCourse("pdf")}
+              className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Download className="w-3.5 h-3.5" /> PDF
+            </button>
+            <button
+              onClick={() => void handleExportCourse("docx")}
+              className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Download className="w-3.5 h-3.5" /> Word
+            </button>
+          </div>
+          <button
+            onClick={handleDeleteCourse}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-medium text-red-300 hover:bg-red-500/20 transition-colors"
+          >
+            <Trash2 className="w-3.5 h-3.5" /> Delete
+          </button>
+        </div>
+      </div>
 
       {/* Course header */}
-      <div className="space-y-4">
-        <div className="flex flex-wrap gap-2">
+      <div className="rounded-3xl border border-border bg-linear-to-br from-purple-500/8 via-background to-background p-5 md:p-6 shadow-sm">
+        <div className="flex flex-wrap gap-2 mb-4">
           <span className={`text-xs px-2 py-0.5 rounded-full border capitalize font-medium ${levelColor}`}>{course.level}</span>
           <span className="text-xs px-2 py-0.5 rounded-full border border-border text-muted-foreground flex items-center gap-1">
             <Clock className="w-3 h-3" /> {course.estimatedHours}h estimated
@@ -395,12 +621,22 @@ export default function CourseView({ courseId }: { courseId: number }) {
             <BarChart2 className="w-3 h-3" /> {total} chapters
           </span>
         </div>
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{course.title}</h1>
-        <p className="text-muted-foreground">{course.description}</p>
+
+        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div className="space-y-2">
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight leading-tight">{course.title}</h1>
+            <p className="max-w-2xl text-sm md:text-base text-muted-foreground">{course.description}</p>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-background/70 px-3 py-2 text-right min-w-42.5">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Progress</p>
+            <p className="mt-1 text-xl font-semibold">{completionPct}%</p>
+          </div>
+        </div>
 
         {/* Generation progress bar */}
         {course.status === "generating" && (
-          <div className="space-y-1.5">
+          <div className="mt-5 space-y-1.5">
             <div className="flex justify-between text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5">
                 <Loader2 className="w-3 h-3 animate-spin" />Generating lessons…
@@ -408,15 +644,16 @@ export default function CourseView({ courseId }: { courseId: number }) {
               <span>{readyChapters}/{total} chapters ready</span>
             </div>
             <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-700"
+              <div className="h-full bg-linear-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-700"
                 style={{ width: `${generationPct}%` }} />
             </div>
+            <p className="text-[11px] text-muted-foreground">{lazyGenerationNote}</p>
           </div>
         )}
 
         {/* User progress bar */}
         {course.status === "ready" && total > 0 && (
-          <div className="space-y-1.5">
+          <div className="mt-5 space-y-1.5">
             <div className="flex justify-between text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-3 h-3 text-green-400" />Your progress
@@ -424,7 +661,7 @@ export default function CourseView({ courseId }: { courseId: number }) {
               <span>{completedCount}/{total} completed ({completionPct}%)</span>
             </div>
             <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full transition-all duration-700"
+              <div className="h-full bg-linear-to-r from-green-500 to-emerald-400 rounded-full transition-all duration-700"
                 style={{ width: `${completionPct}%` }} />
             </div>
           </div>
@@ -439,7 +676,7 @@ export default function CourseView({ courseId }: { courseId: number }) {
             chapter={ch}
             index={i}
             isOpen={openChapter === i}
-            onToggle={() => setOpenChapter(openChapter === i ? null : i)}
+            onToggle={() => handleOpenChapter(ch, i)}
             progress={progress[ch.id]}
             onMarkComplete={handleMarkComplete}
             onQuizPass={handleQuizPass}

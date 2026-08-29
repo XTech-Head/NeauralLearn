@@ -9,7 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/config/db";
 import {
   usersTable, coursesTable, chaptersTable, quizzesTable,
@@ -19,6 +19,7 @@ import {
   generateQuizQuestions, generateFlashcards,
 } from "@/app/ai/ai";
 import { eq, sql } from "drizzle-orm";
+import { getAuthedDbUser } from "@/lib/server-auth";
 
 // ─── YouTube (direct, no internal fetch) ─────────────────────────────────────
 
@@ -97,7 +98,7 @@ async function getOrCreateDbUser(email: string, name: string) {
   return created;
 }
 
-// ─── Background enrichment ────────────────────────────────────────────────────
+// ─── Background enrichment: chapter-by-chapter generation ───────────────────
 
 async function enrichCourseInBackground(
   courseId: number,
@@ -106,17 +107,11 @@ async function enrichCourseInBackground(
 ) {
   for (const chapter of chapters) {
     try {
-      console.log(`Enriching chapter: ${chapter.title}`);
+      console.log(`Generating chapter ${chapter.title}...`);
 
-      const [lessonResult, videoResult, articlesResult] = await Promise.allSettled([
-        generateLessonContent(courseTitle, chapter.title, chapter.description),
-        fetchYouTubeVideo(chapter.youtubeSearchQuery),
-        fetchArticles(`${chapter.title} ${courseTitle}`),
-      ]);
-
-      const content = lessonResult.status === "fulfilled" ? lessonResult.value : "";
-      const video = videoResult.status === "fulfilled" ? videoResult.value : null;
-      const articles = articlesResult.status === "fulfilled" ? articlesResult.value : [];
+      const content = await generateLessonContent(courseTitle, chapter.title, chapter.description);
+      const video = await fetchYouTubeVideo(chapter.youtubeSearchQuery);
+      const articles = await fetchArticles(`${chapter.title} ${courseTitle}`);
 
       console.log(`Chapter "${chapter.title}" — video: ${video?.videoId ?? "none"}, articles: ${articles.length}`);
 
@@ -124,20 +119,18 @@ async function enrichCourseInBackground(
       let flashcards: any[] = [];
 
       if (content) {
-        const [quizResult, flashResult] = await Promise.allSettled([
-          generateQuizQuestions(chapter.title, content),
-          generateFlashcards(chapter.title, content),
-        ]);
-        if (quizResult.status === "fulfilled") questions = quizResult.value;
-        if (flashResult.status === "fulfilled") flashcards = flashResult.value;
+        questions = await generateQuizQuestions(chapter.title, content).catch(() => []);
+        flashcards = await generateFlashcards(chapter.title, content).catch(() => []);
       }
 
-      await db.update(chaptersTable).set({
-        lessonContent: content,
-        youtubeVideo: video,
-        articles: articles as any,
-        flashcards: flashcards as any,
-      }).where(eq(chaptersTable.id, chapter.id));
+      await db.update(chaptersTable)
+        .set({
+          lessonContent: content,
+          youtubeVideo: video,
+          articles: articles as any,
+          flashcards: flashcards as any,
+        })
+        .where(eq(chaptersTable.id, chapter.id));
 
       if (questions.length > 0) {
         await db.insert(quizzesTable)
@@ -145,9 +138,9 @@ async function enrichCourseInBackground(
           .onConflictDoNothing();
       }
 
-      console.log(`Chapter ${chapter.id} enriched successfully`);
+      console.log(`Chapter ${chapter.id} generated successfully`);
     } catch (err) {
-      console.error(`Failed to enrich chapter ${chapter.id}:`, err);
+      console.error(`Failed to generate chapter ${chapter.id}:`, err);
     }
   }
 
@@ -159,19 +152,20 @@ async function enrichCourseInBackground(
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId: clerkId } = await auth();
-    if (!clerkId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { user: dbUser, error, status } = await getAuthedDbUser();
+    if (!dbUser || error) {
+      return NextResponse.json({ error }, { status });
+    }
 
     const { topic } = await req.json();
-    if (!topic || typeof topic !== "string" || topic.trim().length < 3) {
-      return NextResponse.json({ error: "Topic is too short" }, { status: 400 });
+    const normalizedTopic = typeof topic === "string" ? topic.replace(/[\u0000-\u001F\u007F]/g, " ").trim() : "";
+
+    if (!normalizedTopic || normalizedTopic.length < 3 || normalizedTopic.length > 160) {
+      return NextResponse.json({ error: "Topic must be between 3 and 160 characters." }, { status: 400 });
     }
 
     const clerkUser = await currentUser();
-    const email = clerkUser?.emailAddresses[0]?.emailAddress ?? `${clerkId}@unknown.com`;
     const name = `${clerkUser?.firstName ?? ""} ${clerkUser?.lastName ?? ""}`.trim() || "User";
-
-    const dbUser = await getOrCreateDbUser(email, name);
 
     if (dbUser.credits <= 0) {
       return NextResponse.json({ error: "No credits remaining." }, { status: 402 });
@@ -181,11 +175,11 @@ export async function POST(req: NextRequest) {
       .set({ credits: sql`${usersTable.credits} - 1` })
       .where(eq(usersTable.id, dbUser.id));
 
-    const outline = await generateCourseOutline(topic.trim());
+    const outline = await generateCourseOutline(normalizedTopic);
 
     const [course] = await db.insert(coursesTable).values({
       userId: dbUser.id,
-      topic: topic.trim(),
+      topic: normalizedTopic,
       title: outline.title,
       description: outline.description,
       level: outline.level,

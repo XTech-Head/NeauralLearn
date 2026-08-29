@@ -172,7 +172,7 @@ export default function CourseGenerator() {
           <div className="relative group max-w-2xl mx-auto">
             <div className={`absolute -inset-0.5 rounded-2xl blur transition-all duration-300 ${
               isRecording
-                ? "bg-gradient-to-r from-red-500 to-pink-500 opacity-60"
+                ? "bg-linear-to-r from-red-500 to-pink-500 opacity-60"
                 : "bg-linear-to-r from-purple-600 to-pink-600 opacity-30 group-hover:opacity-60"
             }`} />
 
@@ -222,7 +222,7 @@ export default function CourseGenerator() {
                 <button
                   onClick={handleGenerate}
                   disabled={isGenerating || !topic.trim() || micBusy}
-                  className="px-6 py-3 bg-linear-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 whitespace-nowrap min-w-[160px]"
+                  className="px-6 py-3 bg-linear-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 whitespace-nowrap min-w-40"
                 >
                   {isGenerating
                     ? <Loader2 className="w-4 h-4 animate-spin" />
@@ -247,7 +247,7 @@ export default function CourseGenerator() {
               {/* Generation progress — just the bar, no text */}
               {isGenerating && (
                 <div className="h-1 rounded-full bg-muted overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-700"
+                  <div className="h-full bg-linear-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-700"
                     style={{ width: step === "outline" ? "30%" : step === "saving" ? "60%" : "85%" }} />
                 </div>
               )}

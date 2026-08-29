@@ -9,7 +9,7 @@ const mockCourses = [
     progress: 65,
     duration: "4h 30m",
     lessons: 24,
-    thumbnail: "bg-gradient-to-br from-blue-500 to-cyan-500"
+    thumbnail: "bg-linear-to-br from-blue-500 to-cyan-500"
   },
   {
     id: 2,
@@ -17,7 +17,7 @@ const mockCourses = [
     progress: 30,
     duration: "6h 15m",
     lessons: 32,
-    thumbnail: "bg-gradient-to-br from-green-500 to-emerald-500"
+    thumbnail: "bg-linear-to-br from-green-500 to-emerald-500"
   },
   {
     id: 3,
@@ -25,7 +25,7 @@ const mockCourses = [
     progress: 90,
     duration: "5h 45m",
     lessons: 28,
-    thumbnail: "bg-gradient-to-br from-purple-500 to-pink-500"
+    thumbnail: "bg-linear-to-br from-purple-500 to-pink-500"
   }
 ];
 
@@ -68,7 +68,7 @@ function RecentCourses() {
                 </div>
                 <div className="h-2 bg-secondary rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-purple-600 to-pink-600 transition-all duration-300"
+                    className="h-full bg-linear-to-r from-purple-600 to-pink-600 transition-all duration-300"
                     style={{ width: `${course.progress}%` }}
                   />
                 </div>

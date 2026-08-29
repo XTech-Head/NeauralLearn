@@ -112,7 +112,7 @@ function ArticleCard({ article, chapterTitle }: { article: Article; chapterTitle
       className="group flex gap-3 p-3 rounded-xl border border-border bg-card hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all duration-200"
     >
       {/* Icon */}
-      <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mt-0.5">
+      <div className="shrink-0 w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mt-0.5">
         <Newspaper className="w-4 h-4 text-emerald-400" />
       </div>
 
@@ -131,7 +131,7 @@ function ArticleCard({ article, chapterTitle }: { article: Article; chapterTitle
         </div>
       </div>
 
-      <ExternalLink className="flex-shrink-0 w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-emerald-400 transition-colors mt-1" />
+      <ExternalLink className="shrink-0 w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-emerald-400 transition-colors mt-1" />
     </a>
   );
 }
@@ -287,7 +287,7 @@ export default function MediaExplorer({ course }: { course: CourseWithChapters }
               onClick={() => setTab(t)}
               className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-medium transition-all capitalize ${
                 tab === t
-                  ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow"
+                  ? "bg-linear-to-r from-purple-600 to-pink-600 text-white shadow"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
