@@ -367,6 +367,6 @@ No subscriptions. Just support if you want to.
 
 ## 📄 License
 
-This project is currently maintained as a private project.
+This project is licensed under the MIT License.
 
-License terms will be added if and when the repository is released publicly.
+See the [LICENSE](LICENSE) file for more details.
